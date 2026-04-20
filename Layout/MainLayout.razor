@@ -1,0 +1,32 @@
+﻿@inherits LayoutComponentBase
+@inject JudoClubWeb.Services.AuthService Auth
+@inject NavigationManager Nav
+
+<div>
+    <nav style="padding:10px; background:#1a1a2e; color:white; display:flex; gap:16px; align-items:center;">
+        <a href="/" style="color:white">🥋 JudoClub</a>
+
+        @if (Auth.IsLoggedIn)
+        {
+            <a href="/students" style="color:white">Alumnos</a>
+            <span style="margin-left:auto; font-size:0.85em">Rol: @Auth.Role</span>
+            <button @onclick="Logout" style="margin-left:8px;">Cerrar sesión</button>
+        }
+        else
+        {
+            <a href="/login" style="margin-left:auto; color:white">Iniciar sesión</a>
+        }
+    </nav>
+
+    <main style="padding:20px">
+        @Body
+    </main>
+</div>
+
+@code {
+    void Logout()
+    {
+        Auth.Logout();
+        Nav.NavigateTo("/login");
+    }
+}

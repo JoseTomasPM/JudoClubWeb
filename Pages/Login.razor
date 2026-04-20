@@ -1,0 +1,47 @@
+@page "/login"
+@inject JudoClubWeb.Services.AuthService Auth
+@inject NavigationManager Nav
+
+<div style="max-width:400px; margin:100px auto;">
+    <h3>Iniciar sesión</h3>
+
+    @if (error != null)
+    {
+        <p style="color:red">@error</p>
+    }
+
+    <div>
+        <label>Email</label>
+        <input type="email" @bind="email" style="display:block; width:100%; margin-bottom:8px;" />
+    </div>
+    <div>
+        <label>Contraseña</label>
+        <input type="password" @bind="password" style="display:block; width:100%; margin-bottom:16px;" />
+    </div>
+
+    <button @onclick="HandleLogin" disabled="@loading">
+        @(loading ? "Entrando..." : "Entrar")
+    </button>
+</div>
+
+@code {
+    string email    = "";
+    string password = "";
+    string? error   = null;
+    bool loading    = false;
+
+    async Task HandleLogin()
+    {
+        loading = true;
+        error   = null;
+
+        var ok = await Auth.LoginAsync(email, password);
+
+        if (ok)
+            Nav.NavigateTo("/"); // Redirige al home tras login
+        else
+            error = "Email o contraseña incorrectos.";
+
+        loading = false;
+    }
+}
