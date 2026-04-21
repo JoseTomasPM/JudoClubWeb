@@ -3,42 +3,39 @@
 @using JudoClubWeb.Models
 
 <AuthGuard>
-    <a href="/students/@Id">← Volver al perfil</a>
-    <h3 style="margin-top:16px">Documentos</h3>
+    <a href="/students/@Id" class="back-link">← Volver al perfil</a>
+    <h3 class="mt-md">Documentos</h3>
 
     @if (loading) { <p>Cargando...</p> }
     else
     {
-        @if (!documents.Any())
-        {
-            <p style="color:#888">No hay documentos subidos.</p>
-        }
+        @if (!documents.Any()) { <p class="text-muted">No hay documentos subidos.</p> }
         else
         {
             @foreach (var d in documents)
             {
-                <div style="display:flex; align-items:center; justify-content:space-between;
-                            padding:12px; border:1px solid #eee; border-radius:8px; margin-bottom:8px;">
+                <div class="card flex-between mt-sm">
                     <div>
                         <strong>📄 @d.Name</strong>
-                        <p style="margin:2px 0; font-size:0.8em; color:#888">
+                        <p class="text-muted" style="font-size:0.8em; margin:2px 0">
                             Subido por @d.UploadBy · @d.UploadDate.ToString("dd/MM/yyyy")
                         </p>
                     </div>
-                    <a href="@d.Url" target="_blank"
-                       style="padding:6px 12px; background:#1a1a2e; color:white;
-                              border-radius:6px; text-decoration:none; font-size:0.85em;">Ver PDF</a>
+                    <div class="flex gap-sm">
+                        <a href="@d.Url" target="_blank" class="btn btn-primary btn-sm">Ver PDF</a>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteDoc(d.Id)">🗑️</button>
+                    </div>
                 </div>
             }
         }
-        <div style="border:1px dashed #ccc; border-radius:8px; padding:16px; margin-top:16px;">
+
+        <div class="upload-zone">
             <h4 style="margin:0 0 12px">Subir documento</h4>
-            @if (uploadError != null) { <p style="color:red">@uploadError</p> }
-            @if (uploadSuccess) { <p style="color:green">✅ Subido correctamente.</p> }
+            @if (uploadError != null) { <p class="text-error">@uploadError</p> }
+            @if (uploadSuccess) { <p class="text-success">✅ Subido correctamente.</p> }
             <InputFile OnChange="OnFileSelected" accept=".pdf" />
-            <button @onclick="UploadFile" disabled="@(selectedFile == null || uploading)"
-                    style="margin-top:12px; padding:8px 16px; background:#1a1a2e;
-                           color:white; border:none; border-radius:6px; cursor:pointer;">
+            <button class="btn btn-primary mt-sm" @onclick="UploadFile"
+                    disabled="@(selectedFile == null || uploading)">
                 @(uploading ? "Subiendo..." : "Subir PDF")
             </button>
         </div>
@@ -52,16 +49,18 @@
     bool loading = true, uploading = false, uploadSuccess = false;
     string? uploadError;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadDocuments();
-        loading = false;
-    }
+    protected override async Task OnInitializedAsync() { await Load(); loading = false; }
 
-    async Task LoadDocuments()
+    async Task Load()
     {
         try { documents = await Http.GetFromJsonAsync<List<DocumentDto>>($"api/students/{Id}/documents") ?? new(); }
         catch { documents = new(); }
+    }
+
+    async Task DeleteDoc(int docId)
+    {
+        await Http.DeleteAsync($"api/students/{Id}/documents/{docId}");
+        await Load();
     }
 
     void OnFileSelected(InputFileChangeEventArgs e) { selectedFile = e.File; uploadSuccess = false; uploadError = null; }
@@ -77,9 +76,9 @@
             using var fileContent = new StreamContent(stream);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
             content.Add(fileContent, "file", selectedFile.Name);
-            var response = await Http.PostAsync($"api/students/{Id}/documents", content);
-            if (response.IsSuccessStatusCode) { uploadSuccess = true; selectedFile = null; await LoadDocuments(); }
-            else uploadError = "Error al subir. Comprueba que es un PDF menor de 5MB.";
+            var r = await Http.PostAsync($"api/students/{Id}/documents", content);
+            if (r.IsSuccessStatusCode) { uploadSuccess = true; selectedFile = null; await Load(); }
+            else uploadError = "Error al subir. Máximo 5MB y solo PDF.";
         }
         catch (Exception ex) { uploadError = $"Error: {ex.Message}"; }
         uploading = false;

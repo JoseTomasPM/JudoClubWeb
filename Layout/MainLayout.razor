@@ -2,41 +2,34 @@
 @inject JudoClubWeb.Services.AuthService Auth
 @inject NavigationManager Nav
 
-<div>
-    <nav style="padding:10px; background:#1a1a2e; color:white; display:flex; gap:16px; align-items:center;">
-        <a href="/" style="color:white">🥋 JudoClub</a>
+<nav class="navbar">
+    <a href="/">🥋 JudoClub</a>
+    @if (Auth.IsLoggedIn)
+    {
+        <a href="/students">Alumnos</a>
+        <a href="/sessions">Sesiones</a>
+        @if (Auth.Role == "Admin")
+        {
+            <a href="/admin">Panel Admin</a>
+        }
+        <div class="nav-right">
+            <span class="rol-label">@Auth.Role</span>
+            <button class="btn btn-danger btn-sm" @onclick="Logout">Cerrar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="nav-right">
+            <a href="/login">Iniciar sesión</a>
+            <a href="/register">Registrarse</a>
+        </div>
+    }
+</nav>
 
-        @if (Auth.IsLoggedIn)
-        {
-            <a href="/students" style="color:white">Alumnos</a>
-            <span style="margin-left:auto; font-size:0.85em">Rol: @Auth.Role</span>
-            <button @onclick="Logout" style="margin-left:8px;">Cerrar sesión</button>
-        }
-        else
-        {
-            <a href="/login" style="margin-left:auto; color:white">Iniciar sesión</a>
-        }
-        @if (Auth.IsLoggedIn)
-        {
-            <a href="/students" style="color:white">Alumnos</a>
-            @if (Auth.Role == "Admin")
-            {
-                <a href="/admin" style="color:white">Panel Admin</a>
-            }
-        }
-    </nav>
-
-    <main style="padding:20px">
-        @Body
-    </main>
-</div>
+<main class="page-content">
+    @Body
+</main>
 
 @code {
-    void Logout()
-    {
-        Auth.Logout();
-        Nav.NavigateTo("/login");
-    }
-
-    
+    void Logout() { Auth.Logout(); Nav.NavigateTo("/login"); }
 }

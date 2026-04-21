@@ -1,0 +1,86 @@
+﻿@page "/students/new"
+@page "/students/{Id:int}/edit"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@using JudoClubWeb.Models
+
+<AuthGuard RequiredRole="Admin">
+    <a href="/students" class="back-link">← Volver</a>
+    <h3 class="mt-md">@(Id == 0 ? "Nuevo alumno" : "Editar alumno")</h3>
+
+    @if (error != null) { <p class="text-error">@error</p> }
+
+    <div class="form-container">
+        <div class="form-group">
+            <label>Nombre</label>
+            <input @bind="name" />
+        </div>
+        <div class="form-group">
+            <label>Fecha de nacimiento</label>
+            <input type="date" @bind="birthDate" />
+        </div>
+        <div class="form-group">
+            <label>Cinturón</label>
+            <select @bind="belt">
+                @foreach (var b in belts)
+                {
+                    <option value="@b.Value">@b.Label</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Categoría</label>
+            <input @bind="category" />
+        </div>
+        @if (Id == 0)
+        {
+            <div class="form-group">
+                <label>UserId del tutor</label>
+                <input type="number" @bind="userId" />
+            </div>
+        }
+        <button class="btn btn-primary" @onclick="HandleSubmit" disabled="@loading">
+            @(loading ? "Guardando..." : (Id == 0 ? "Crear alumno" : "Guardar cambios"))
+        </button>
+    </div>
+</AuthGuard>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    string name = "", category = "";
+    DateTime birthDate = DateTime.Today;
+    int belt = 0, userId = 0;
+    string? error;
+    bool loading;
+
+    record BeltOption(int Value, string Label);
+    List<BeltOption> belts = new()
+    {
+        new(0,"Blanco"), new(1,"Blanco-Amarillo"), new(2,"Amarillo"),
+        new(3,"Amarillo-Naranja"), new(4,"Naranja"), new(5,"Naranja-Verde"),
+        new(6,"Verde"), new(7,"Verde-Azul"), new(8,"Azul"),
+        new(9,"Azul-Marrón"), new(10,"Marrón"), new(11,"Negro 1º Dan"),
+        new(12,"Negro 2º Dan"), new(13,"Negro 3º Dan")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            var s = await Http.GetFromJsonAsync<StudentDto>($"api/student/{Id}");
+            if (s != null) { name = s.Name; birthDate = s.BirthDate; category = s.Category; userId = s.UserId; }
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        loading = true; error = null;
+        var body = new { name, birthDate, belt, category, userId = Id == 0 ? userId : (int?)null };
+        var response = Id == 0
+            ? await Http.PostAsJsonAsync("api/student", body)
+            : await Http.PutAsJsonAsync($"api/student/{Id}", body);
+        if (response.IsSuccessStatusCode) Nav.NavigateTo("/students");
+        else error = "Error al guardar. Comprueba los datos.";
+        loading = false;
+    }
+}

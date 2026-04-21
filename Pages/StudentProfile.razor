@@ -9,37 +9,30 @@
     }
     else if (student == null)
     {
-        <p style="color:red">Alumno no encontrado o sin acceso.</p>
-        <a href="/students">← Volver</a>
+        <p>Alumno no encontrado o sin acceso.</p>
+        <a href="/students" class="back-link">← Volver</a>
     }
     else
     {
-        <a href="/students">← Volver a la lista</a>
-        <div style="max-width:600px; margin-top:16px;">
-            <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
-                <div style="width:80px; height:80px; border-radius:50%; background:#1a1a2e;
-                            display:flex; align-items:center; justify-content:center;
-                            color:white; font-size:2em;">🥋</div>
+        <a href="/students" class="back-link">← Volver a la lista</a>
+
+        <div class="card mt-md">
+            <div class="flex gap-md" style="margin-bottom:16px">
+                <div style="font-size:3em">🥋</div>
                 <div>
                     <h2 style="margin:0">@student.Name</h2>
-                    <p style="margin:4px 0; color:#888">@student.Category</p>
+                    <p class="text-muted" style="margin:4px 0">@student.Category</p>
                 </div>
             </div>
-            <div style="border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;">
-                <h4 style="margin:0 0 12px">Datos personales</h4>
-                <p><strong>Fecha de nacimiento:</strong> @student.BirthDate.ToString("dd/MM/yyyy")</p>
-                <p><strong>Cinturón:</strong> @student.Belt</p>
-                <p><strong>Categoría:</strong> @student.Category</p>
-            </div>
-            <div style="display:flex; gap:12px;">
-                <a href="/students/@student.Id/payments"
-                   style="padding:8px 16px; background:#1a1a2e; color:white; border-radius:6px; text-decoration:none;">
-                    💳 Ver pagos
-                </a>
-                <a href="/students/@student.Id/documents"
-                   style="padding:8px 16px; background:#1a1a2e; color:white; border-radius:6px; text-decoration:none;">
-                    📄 Ver documentos
-                </a>
+
+            <h4>Datos personales</h4>
+            <p><strong>Fecha de nacimiento:</strong> @student.BirthDate.ToString("dd/MM/yyyy")</p>
+            <p><strong>Cinturón:</strong> @student.Belt</p>
+            <p><strong>Categoría:</strong> @student.Category</p>
+
+            <div class="flex gap-sm mt-md">
+                <a href="/students/@student.Id/payments" class="btn btn-primary btn-sm">💳 Ver pagos</a>
+                <a href="/students/@student.Id/documents" class="btn btn-primary btn-sm">📄 Ver documentos</a>
             </div>
         </div>
     }

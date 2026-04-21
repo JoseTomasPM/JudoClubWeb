@@ -1,0 +1,45 @@
+﻿@page "/sessions"
+@inject HttpClient Http
+@inject JudoClubWeb.Services.AuthService Auth
+@using JudoClubWeb.Models
+
+<AuthGuard>
+    <div class="flex-between">
+        <h3>📅 Sesiones</h3>
+        @if (Auth.Role == "Admin")
+        {
+            <a href="/sessions/new" class="btn btn-primary">+ Nueva sesión</a>
+        }
+    </div>
+
+    @if (loading) { <p>Cargando...</p> }
+    else if (!sessions.Any()) { <p class="text-muted">No hay sesiones registradas.</p> }
+    else
+    {
+        <div class="session-list">
+            @foreach (var s in sessions.OrderByDescending(s => s.Date))
+            {
+                <div class="session-item">
+                    <div>
+                        <strong>@s.Date.ToString("dd/MM/yyyy HH:mm")</strong>
+                        <p class="text-muted" style="margin:4px 0">@s.Description</p>
+                        <p class="text-muted" style="font-size:0.85em; margin:0">@s.StudentCount alumnos</p>
+                    </div>
+                    <a href="/sessions/@s.Id" class="btn btn-primary btn-sm">Ver →</a>
+                </div>
+            }
+        </div>
+    }
+</AuthGuard>
+
+@code {
+    List<SessionDto> sessions = new();
+    bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { sessions = await Http.GetFromJsonAsync<List<SessionDto>>("api/sessions") ?? new(); }
+        catch { sessions = new(); }
+        loading = false;
+    }
+}

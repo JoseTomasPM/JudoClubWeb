@@ -1,0 +1,39 @@
+﻿@page "/register"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="auth-container">
+    <h3>Crear cuenta</h3>
+
+    @if (error != null) { <p class="text-error">@error</p> }
+    @if (success) { <p class="text-success">✅ Cuenta creada. <a href="/login">Inicia sesión</a></p> }
+
+    <div class="form-group">
+        <label>Email</label>
+        <input type="email" @bind="email" />
+    </div>
+    <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" @bind="password" />
+    </div>
+
+    <button class="btn btn-primary" @onclick="HandleRegister" disabled="@loading">
+        @(loading ? "Creando cuenta..." : "Registrarse")
+    </button>
+    <p class="mt-sm">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
+</div>
+
+@code {
+    string email = "", password = "";
+    string? error;
+    bool loading, success;
+
+    async Task HandleRegister()
+    {
+        loading = true; error = null;
+        var response = await Http.PostAsJsonAsync("api/auth/register", new { email, password, rol = 1 });
+        if (response.IsSuccessStatusCode) success = true;
+        else error = "No se pudo crear la cuenta. Comprueba que el email no está en uso.";
+        loading = false;
+    }
+}

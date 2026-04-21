@@ -1,0 +1,60 @@
+﻿@page "/admin/payments"
+@inject HttpClient Http
+@using JudoClubWeb.Models
+
+<AuthGuard RequiredRole="Admin">
+    <a href="/admin" class="back-link">← Panel admin</a>
+    <h3 class="mt-md">💳 Pagos pendientes</h3>
+
+    @if (loading) { <p>Cargando...</p> }
+    else if (!payments.Any()) { <p class="text-muted">No hay pagos pendientes.</p> }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Concepto</th>
+                    <th>Importe</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in payments)
+                {
+                    <tr>
+                        <td><a href="/students/@p.StudentId">Alumno #@p.StudentId</a></td>
+                        <td>@p.Concept</td>
+                        <td>@p.Amount.ToString("0.00") €</td>
+                        <td>@p.Date.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" @onclick="() => MarkCompleted(p.Id)">
+                                ✅ Marcar pagado
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</AuthGuard>
+
+@code {
+    List<PaymentDto> payments = new();
+    bool loading = true;
+
+    protected override async Task OnInitializedAsync() { await LoadPending(); loading = false; }
+
+    async Task LoadPending()
+    {
+        try { payments = await Http.GetFromJsonAsync<List<PaymentDto>>("api/payments/pending") ?? new(); }
+        catch { payments = new(); }
+    }
+
+    async Task MarkCompleted(int id)
+    {
+        await Http.PutAsJsonAsync($"api/payments/{id}/status", new { status = 1 });
+        await LoadPending();
+    }
+}
