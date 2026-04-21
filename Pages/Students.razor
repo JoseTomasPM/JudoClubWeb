@@ -1,51 +1,46 @@
 ﻿@page "/students"
 @inject JudoClubWeb.Services.AuthService Auth
 @inject JudoClubWeb.Services.StudentService StudentSvc
-@inject NavigationManager Nav
 @using JudoClubWeb.Models
 
-@if (!Auth.IsLoggedIn)
-{
-    Nav.NavigateTo("/login");
-    return;
-}
+<AuthGuard>
+    <h3>Alumnos</h3>
 
-<h3>Alumnos</h3>
-
-@if (loading)
-{
-    <p>Cargando...</p>
-}
-else if (students == null || !students.Any())
-{
-    <p>No hay alumnos registrados.</p>
-}
-else
-{
-    <div style="display:flex; flex-wrap:wrap; gap:16px;">
-        @foreach (var s in students)
-        {
-            <div style="border:1px solid #ccc; border-radius:8px; padding:16px; width:200px;">
-                <h4 style="margin:0 0 8px">@s.Name</h4>
-                <p style="margin:4px 0">🥋 @s.Belt</p>
-                <p style="margin:4px 0">📁 @s.Category</p>
-                <p style="margin:4px 0; font-size:0.8em; color:#888">
-                    @s.BirthDate.ToString("dd/MM/yyyy")
-                </p>
-                <a href="/students/@s.Id">Ver perfil →</a>
-            </div>
-        }
-    </div>
-}
+    @if (loading)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!students.Any())
+    {
+        <p>No hay alumnos registrados.</p>
+    }
+    else
+    {
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+            @foreach (var s in students)
+            {
+                <div style="border:1px solid #ccc; border-radius:8px; padding:16px; width:200px;">
+                    <h4 style="margin:0 0 8px">@s.Name</h4>
+                    <p style="margin:4px 0">🥋 @s.Belt</p>
+                    <p style="margin:4px 0">📁 @s.Category</p>
+                    <p style="margin:4px 0; font-size:0.8em; color:#888">
+                        @s.BirthDate.ToString("dd/MM/yyyy")
+                    </p>
+                    <a href="/students/@s.Id">Ver perfil →</a>
+                </div>
+            }
+        </div>
+    }
+</AuthGuard>
 
 @code {
-    List<StudentDto>? students;
+    List<StudentDto> students = new();
     bool loading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        var isAdmin = Auth.Role == "Admin";
-        students = await StudentSvc.GetStudentsAsync(isAdmin);
+        if (!Auth.IsLoggedIn) return;
+        students = await StudentSvc.GetStudentsAsync(Auth.Role == "Admin");
         loading  = false;
     }
 }

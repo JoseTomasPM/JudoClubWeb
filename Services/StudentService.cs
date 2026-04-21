@@ -15,4 +15,26 @@ public class StudentService
         var result = await _http.GetFromJsonAsync<List<StudentDto>>(url);
         return result ?? new List<StudentDto>();
     }
+
+    public async Task<StudentDto?> GetByIdAsync(int id)
+    {
+        try
+        {
+            return await _http.GetFromJsonAsync<StudentDto>($"api/student/{id}");
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+
+    public async Task<List<SessionDto>> GetStudentSessionsAsync(int studentId)
+    {
+        // Obtiene todas las sesiones y filtra las que tiene el alumno
+        var all = await _http.GetFromJsonAsync<List<SessionDto>>("api/sessions")
+                  ?? new List<SessionDto>();
+        return all;
+    }
+
 }

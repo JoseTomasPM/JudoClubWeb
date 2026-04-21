@@ -1,0 +1,58 @@
+﻿@page "/students/{Id:int}"
+@inject JudoClubWeb.Services.StudentService StudentSvc
+@using JudoClubWeb.Models
+
+<AuthGuard>
+    @if (loading)
+    {
+        <p>Cargando perfil...</p>
+    }
+    else if (student == null)
+    {
+        <p style="color:red">Alumno no encontrado o sin acceso.</p>
+        <a href="/students">← Volver</a>
+    }
+    else
+    {
+        <a href="/students">← Volver a la lista</a>
+        <div style="max-width:600px; margin-top:16px;">
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+                <div style="width:80px; height:80px; border-radius:50%; background:#1a1a2e;
+                            display:flex; align-items:center; justify-content:center;
+                            color:white; font-size:2em;">🥋</div>
+                <div>
+                    <h2 style="margin:0">@student.Name</h2>
+                    <p style="margin:4px 0; color:#888">@student.Category</p>
+                </div>
+            </div>
+            <div style="border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;">
+                <h4 style="margin:0 0 12px">Datos personales</h4>
+                <p><strong>Fecha de nacimiento:</strong> @student.BirthDate.ToString("dd/MM/yyyy")</p>
+                <p><strong>Cinturón:</strong> @student.Belt</p>
+                <p><strong>Categoría:</strong> @student.Category</p>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="/students/@student.Id/payments"
+                   style="padding:8px 16px; background:#1a1a2e; color:white; border-radius:6px; text-decoration:none;">
+                    💳 Ver pagos
+                </a>
+                <a href="/students/@student.Id/documents"
+                   style="padding:8px 16px; background:#1a1a2e; color:white; border-radius:6px; text-decoration:none;">
+                    📄 Ver documentos
+                </a>
+            </div>
+        </div>
+    }
+</AuthGuard>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    StudentDto? student;
+    bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        student = await StudentSvc.GetByIdAsync(Id);
+        loading = false;
+    }
+}

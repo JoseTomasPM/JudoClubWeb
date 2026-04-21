@@ -1,0 +1,57 @@
+﻿@page "/admin"
+@inject HttpClient Http
+@using JudoClubWeb.Models
+
+<AuthGuard RequiredRole="Admin">
+    <h2>🛡️ Panel de administración</h2>
+
+    @if (loading) { <p>Cargando datos...</p> }
+    else
+    {
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:32px;">
+            <div style="@CardStyle("#1a1a2e")">
+                <p style="margin:0; font-size:2em; font-weight:bold;">@totalStudents</p>
+                <p style="margin:4px 0 0">Alumnos totales</p>
+            </div>
+            <div style="@CardStyle("#f59e0b")">
+                <p style="margin:0; font-size:2em; font-weight:bold;">@pendingPayments</p>
+                <p style="margin:4px 0 0">Pagos pendientes</p>
+            </div>
+            <div style="@CardStyle("#22c55e")">
+                <p style="margin:0; font-size:2em; font-weight:bold;">@upcomingSessions</p>
+                <p style="margin:4px 0 0">Próximas sesiones</p>
+            </div>
+        </div>
+        <h4>Accesos rápidos</h4>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="/students" style="@ButtonStyle">👥 Gestionar alumnos</a>
+            <a href="/admin/payments" style="@ButtonStyle">💳 Pagos pendientes</a>
+            <a href="/sessions" style="@ButtonStyle">📅 Gestionar sesiones</a>
+        </div>
+    }
+</AuthGuard>
+
+@code {
+    int totalStudents, pendingPayments, upcomingSessions;
+    bool loading = true;
+
+    string CardStyle(string bg) =>
+        $"background:{bg}; color:white; border-radius:10px; padding:20px; min-width:150px; text-align:center;";
+    string ButtonStyle =>
+        "padding:10px 20px; background:#1a1a2e; color:white; border-radius:8px; text-decoration:none;";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var students = await Http.GetFromJsonAsync<List<StudentDto>>("api/student") ?? new();
+            totalStudents = students.Count;
+            var pending = await Http.GetFromJsonAsync<List<PaymentDto>>("api/payments/pending") ?? new();
+            pendingPayments = pending.Count;
+            var sessions = await Http.GetFromJsonAsync<List<SessionDto>>("api/sessions") ?? new();
+            upcomingSessions = sessions.Count(s => s.Date >= DateTime.UtcNow);
+        }
+        catch { }
+        loading = false;
+    }
+}

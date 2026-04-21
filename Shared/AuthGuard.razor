@@ -1,0 +1,20 @@
+@inject JudoClubWeb.Services.AuthService Auth
+@inject NavigationManager Nav
+
+@if (Auth.IsLoggedIn)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string RequiredRole { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsLoggedIn)
+            Nav.NavigateTo("/login", replace: true);
+        else if (RequiredRole != "" && Auth.Role != RequiredRole)
+            Nav.NavigateTo("/", replace: true);
+    }
+}

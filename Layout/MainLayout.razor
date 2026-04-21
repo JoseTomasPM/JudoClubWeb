@@ -16,6 +16,14 @@
         {
             <a href="/login" style="margin-left:auto; color:white">Iniciar sesión</a>
         }
+        @if (Auth.IsLoggedIn)
+        {
+            <a href="/students" style="color:white">Alumnos</a>
+            @if (Auth.Role == "Admin")
+            {
+                <a href="/admin" style="color:white">Panel Admin</a>
+            }
+        }
     </nav>
 
     <main style="padding:20px">
@@ -29,4 +37,6 @@
         Auth.Logout();
         Nav.NavigateTo("/login");
     }
+
+    
 }

@@ -1,0 +1,87 @@
+﻿@page "/students/{Id:int}/documents"
+@inject HttpClient Http
+@using JudoClubWeb.Models
+
+<AuthGuard>
+    <a href="/students/@Id">← Volver al perfil</a>
+    <h3 style="margin-top:16px">Documentos</h3>
+
+    @if (loading) { <p>Cargando...</p> }
+    else
+    {
+        @if (!documents.Any())
+        {
+            <p style="color:#888">No hay documentos subidos.</p>
+        }
+        else
+        {
+            @foreach (var d in documents)
+            {
+                <div style="display:flex; align-items:center; justify-content:space-between;
+                            padding:12px; border:1px solid #eee; border-radius:8px; margin-bottom:8px;">
+                    <div>
+                        <strong>📄 @d.Name</strong>
+                        <p style="margin:2px 0; font-size:0.8em; color:#888">
+                            Subido por @d.UploadBy · @d.UploadDate.ToString("dd/MM/yyyy")
+                        </p>
+                    </div>
+                    <a href="@d.Url" target="_blank"
+                       style="padding:6px 12px; background:#1a1a2e; color:white;
+                              border-radius:6px; text-decoration:none; font-size:0.85em;">Ver PDF</a>
+                </div>
+            }
+        }
+        <div style="border:1px dashed #ccc; border-radius:8px; padding:16px; margin-top:16px;">
+            <h4 style="margin:0 0 12px">Subir documento</h4>
+            @if (uploadError != null) { <p style="color:red">@uploadError</p> }
+            @if (uploadSuccess) { <p style="color:green">✅ Subido correctamente.</p> }
+            <InputFile OnChange="OnFileSelected" accept=".pdf" />
+            <button @onclick="UploadFile" disabled="@(selectedFile == null || uploading)"
+                    style="margin-top:12px; padding:8px 16px; background:#1a1a2e;
+                           color:white; border:none; border-radius:6px; cursor:pointer;">
+                @(uploading ? "Subiendo..." : "Subir PDF")
+            </button>
+        </div>
+    }
+</AuthGuard>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    List<DocumentDto> documents = new();
+    IBrowserFile? selectedFile;
+    bool loading = true, uploading = false, uploadSuccess = false;
+    string? uploadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDocuments();
+        loading = false;
+    }
+
+    async Task LoadDocuments()
+    {
+        try { documents = await Http.GetFromJsonAsync<List<DocumentDto>>($"api/students/{Id}/documents") ?? new(); }
+        catch { documents = new(); }
+    }
+
+    void OnFileSelected(InputFileChangeEventArgs e) { selectedFile = e.File; uploadSuccess = false; uploadError = null; }
+
+    async Task UploadFile()
+    {
+        if (selectedFile == null) return;
+        uploading = true; uploadError = null; uploadSuccess = false;
+        try
+        {
+            using var content     = new MultipartFormDataContent();
+            using var stream      = selectedFile.OpenReadStream(5 * 1024 * 1024);
+            using var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+            content.Add(fileContent, "file", selectedFile.Name);
+            var response = await Http.PostAsync($"api/students/{Id}/documents", content);
+            if (response.IsSuccessStatusCode) { uploadSuccess = true; selectedFile = null; await LoadDocuments(); }
+            else uploadError = "Error al subir. Comprueba que es un PDF menor de 5MB.";
+        }
+        catch (Exception ex) { uploadError = $"Error: {ex.Message}"; }
+        uploading = false;
+    }
+}
