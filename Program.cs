@@ -11,7 +11,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://proapi-arwk.onrender.com")
+    BaseAddress = new Uri("https://judoclubapi.onrender.com")
 });
 
 await builder.Build().RunAsync();
