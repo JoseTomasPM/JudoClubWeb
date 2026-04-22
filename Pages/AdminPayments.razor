@@ -4,12 +4,25 @@
 
 <AuthGuard RequiredRole="Admin">
     <a href="/admin" class="back-link">← Panel admin</a>
-    <h3 class="mt-md">💳 Pagos pendientes</h3>
+    <div class="flex-between mt-md">
+        <h3>💳 Gestión de pagos</h3>
+
+        @* Filtro de estado *@
+        <select @bind="statusFilter"
+                style="padding:6px; border-radius:var(--radius); border:1px solid #ccc;">
+            <option value="">Todos</option>
+            <option value="Pending">Pendientes</option>
+            <option value="Completed">Completados</option>
+            <option value="Failed">Fallidos</option>
+        </select>
+    </div>
 
     @if (loading) { <p>Cargando...</p> }
-    else if (!payments.Any()) { <p class="text-muted">No hay pagos pendientes.</p> }
+    else if (!FilteredPayments.Any()) { <p class="text-muted">No hay pagos con este filtro.</p> }
     else
     {
+        <p class="mt-sm text-muted">Mostrando @FilteredPayments.Count() de @payments.Count pagos</p>
+
         <table class="table">
             <thead>
                 <tr>
@@ -17,21 +30,26 @@
                     <th>Concepto</th>
                     <th>Importe</th>
                     <th>Fecha</th>
-                    <th>Acción</th>
+                    <th>Estado</th>
+                    <th>Cambiar estado</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var p in payments)
+                @foreach (var p in FilteredPayments)
                 {
                     <tr>
-                        <td><a href="/students/@p.StudentId">Alumno #@p.StudentId</a></td>
+                        <td><a href="/students/@p.StudentId/payments">Alumno #@p.StudentId</a></td>
                         <td>@p.Concept</td>
                         <td>@p.Amount.ToString("0.00") €</td>
                         <td>@p.Date.ToString("dd/MM/yyyy")</td>
+                        <td><span class="badge @GetBadgeClass(p.Status)">@p.Status</span></td>
                         <td>
-                            <button class="btn btn-success btn-sm" @onclick="() => MarkCompleted(p.Id)">
-                                ✅ Marcar pagado
-                            </button>
+                            <select @onchange="e => ChangeStatus(p.Id, e)"
+                                    style="padding:4px; border-radius:var(--radius); border:1px solid #ccc;">
+                                <option value="0" selected="@(p.Status == "Pending")">Pending</option>
+                                <option value="1" selected="@(p.Status == "Completed")">Completed</option>
+                                <option value="2" selected="@(p.Status == "Failed")">Failed</option>
+                            </select>
                         </td>
                     </tr>
                 }
@@ -42,19 +60,35 @@
 
 @code {
     List<PaymentDto> payments = new();
+    string statusFilter = "Pending"; // Por defecto muestra pendientes
     bool loading = true;
 
-    protected override async Task OnInitializedAsync() { await LoadPending(); loading = false; }
+    IEnumerable<PaymentDto> FilteredPayments => string.IsNullOrEmpty(statusFilter)
+        ? payments
+        : payments.Where(p => p.Status == statusFilter);
 
-    async Task LoadPending()
+    protected override async Task OnInitializedAsync()
     {
-        try { payments = await Http.GetFromJsonAsync<List<PaymentDto>>("api/payments/pending") ?? new(); }
+        try { payments = await Http.GetFromJsonAsync<List<PaymentDto>>("api/payments") ?? new(); }
         catch { payments = new(); }
+        loading = false;
     }
 
-    async Task MarkCompleted(int id)
+    async Task ChangeStatus(int paymentId, ChangeEventArgs e)
     {
-        await Http.PutAsJsonAsync($"api/payments/{id}/status", new { status = 1 });
-        await LoadPending();
+        if (int.TryParse(e.Value?.ToString(), out var status))
+        {
+            await Http.PutAsJsonAsync($"api/payments/{paymentId}/status", new { status });
+            // Actualizar localmente sin recargar todo
+            var p = payments.FirstOrDefault(x => x.Id == paymentId);
+            if (p != null) p.Status = status switch { 1 => "Completed", 2 => "Failed", _ => "Pending" };
+        }
     }
+
+    string GetBadgeClass(string s) => s switch
+    {
+        "Completed" => "badge-success",
+        "Failed"    => "badge-danger",
+        _           => "badge-warning"
+    };
 }

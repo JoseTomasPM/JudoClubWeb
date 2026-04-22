@@ -9,15 +9,35 @@
 
     @if (error != null) { <p class="text-error">@error</p> }
 
-    <div class="form-container">
+    <div class="form-container mt-md">
+        <div class="form-group">
+            <label>Categoría</label>
+            <select @bind="category">
+                <option value="0">Benjamín (Sub-11)</option>
+                <option value="1">Alevín (Sub-13)</option>
+                <option value="2">Infantil (Sub-15)</option>
+                <option value="3">Cadete (Sub-17)</option>
+                <option value="4">Júnior (Sub-20)</option>
+                <option value="5">Sub-23</option>
+                <option value="6">Senior</option>
+            </select>
+        </div>
         <div class="form-group">
             <label>Fecha y hora</label>
             <input type="datetime-local" @bind="date" />
         </div>
         <div class="form-group">
             <label>Descripción</label>
-            <input @bind="description" />
+            <input @bind="description" placeholder="Ej: Entrenamiento lunes" />
         </div>
+
+        @if (Id == 0)
+        {
+            <p class="text-muted" style="font-size:0.85em">
+                ℹ️ Al crear la sesión, todos los alumnos de esta categoría serán asignados automáticamente.
+            </p>
+        }
+
         <button class="btn btn-primary" @onclick="HandleSubmit" disabled="@loading">
             @(loading ? "Guardando..." : (Id == 0 ? "Crear sesión" : "Guardar cambios"))
         </button>
@@ -26,8 +46,10 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+
+    int category = 0;
+    string description = ""; 
     DateTime date = DateTime.Today;
-    string description = "";
     string? error;
     bool loading;
 
@@ -36,22 +58,30 @@
         if (Id != 0)
         {
             var s = await Http.GetFromJsonAsync<SessionDto>($"api/sessions/{Id}");
-            if (s != null) { date = s.Date; description = s.Description; }
+            if (s != null)
+            {
+                date        = s.Date;
+                description = s.Description;
+                category    = Enum.TryParse<CategoryEnum>(s.Category, out var cat) ? (int)cat : 0;
+            }
         }
     }
 
     async Task HandleSubmit()
     {
         loading = true; error = null;
-        var body = new { date, description };
+        var body = new { date, description, category };
         var response = Id == 0
             ? await Http.PostAsJsonAsync("api/sessions", body)
             : await Http.PutAsJsonAsync($"api/sessions/{Id}", body);
-        if (response.IsSuccessStatusCode) Nav.NavigateTo("/sessions");
-        else error = "Error al guardar la sesión.";
+
+        if (response.IsSuccessStatusCode)
+            Nav.NavigateTo("/sessions");
+        else
+            error = "Error al guardar la sesión.";
         loading = false;
     }
 
-    record SessionDto(int Id, DateTime Date, string Description, int StudentCount);
-    record SessionStudentDto(int StudentId, string Name, string Belt);
+    enum CategoryEnum { Benjamin, Alevin, Infantil, Cadete, Junior, Sub23, Senior }
+    record SessionDto(int Id, DateTime Date, string Description, string Category, int StudentCount);
 }

@@ -10,7 +10,7 @@
 
     @if (error != null) { <p class="text-error">@error</p> }
 
-    <div class="form-container">
+    <div class="form-container mt-md">
         <div class="form-group">
             <label>Nombre</label>
             <input @bind="name" />
@@ -22,15 +22,40 @@
         <div class="form-group">
             <label>Cinturón</label>
             <select @bind="belt">
-                @foreach (var b in belts)
-                {
-                    <option value="@b.Value">@b.Label</option>
-                }
+                <option value="0">Blanco</option>
+                <option value="1">Blanco-Amarillo</option>
+                <option value="2">Amarillo</option>
+                <option value="3">Amarillo-Naranja</option>
+                <option value="4">Naranja</option>
+                <option value="5">Naranja-Verde</option>
+                <option value="6">Verde</option>
+                <option value="7">Verde-Azul</option>
+                <option value="8">Azul</option>
+                <option value="9">Azul-Marrón</option>
+                <option value="10">Marrón</option>
+                <option value="11">Negro 1º Dan</option>
+                <option value="12">Negro 2º Dan</option>
+                <option value="14">Negro 3º Dan</option>
+                <option value="15">Negro 4º Dan</option>
+                <option value="16">Negro 5º Dan</option>
+                <option value="17">Rojo-Blanco 6º Dan</option>
+                <option value="18">Rojo-Blanco 7º Dan</option>
+                <option value="19">Rojo-Blanco 8º Dan</option>
+                <option value="20">Rojo 9º Dan</option>
+                <option value="21">Rojo 10º Dan</option>
             </select>
         </div>
         <div class="form-group">
             <label>Categoría</label>
-            <input @bind="category" />
+            <select @bind="category">
+                <option value="0">Benjamín (Sub-11)</option>
+                <option value="1">Alevín (Sub-13)</option>
+                <option value="2">Infantil (Sub-15)</option>
+                <option value="3">Cadete (Sub-17)</option>
+                <option value="4">Júnior (Sub-20)</option>
+                <option value="5">Sub-23</option>
+                <option value="6">Senior</option>
+            </select>
         </div>
         @if (Id == 0)
         {
@@ -47,28 +72,28 @@
 
 @code {
     [Parameter] public int Id { get; set; }
-    string name = "", category = "";
+
+    string name = "";
     DateTime birthDate = DateTime.Today;
-    int belt = 0, userId = 0;
+    int belt = 0;
+    int category = 0;
+    int userId = 0;
     string? error;
     bool loading;
-
-    record BeltOption(int Value, string Label);
-    List<BeltOption> belts = new()
-    {
-        new(0,"Blanco"), new(1,"Blanco-Amarillo"), new(2,"Amarillo"),
-        new(3,"Amarillo-Naranja"), new(4,"Naranja"), new(5,"Naranja-Verde"),
-        new(6,"Verde"), new(7,"Verde-Azul"), new(8,"Azul"),
-        new(9,"Azul-Marrón"), new(10,"Marrón"), new(11,"Negro 1º Dan"),
-        new(12,"Negro 2º Dan"), new(13,"Negro 3º Dan")
-    };
 
     protected override async Task OnInitializedAsync()
     {
         if (Id != 0)
         {
             var s = await Http.GetFromJsonAsync<StudentDto>($"api/student/{Id}");
-            if (s != null) { name = s.Name; birthDate = s.BirthDate; category = s.Category; userId = s.UserId; }
+            if (s != null)
+            {
+                name      = s.Name;
+                birthDate = s.BirthDate;
+                userId    = s.UserId;
+                belt     = Enum.TryParse<BeltEnum>(s.Belt.Replace(" ", "").Replace("º", ""), out var b) ? (int)b : 0;
+                category = Enum.TryParse<CategoryEnum>(s.Category, out var cat) ? (int)cat : 0;
+            }
         }
     }
 
@@ -79,8 +104,14 @@
         var response = Id == 0
             ? await Http.PostAsJsonAsync("api/student", body)
             : await Http.PutAsJsonAsync($"api/student/{Id}", body);
-        if (response.IsSuccessStatusCode) Nav.NavigateTo("/students");
-        else error = "Error al guardar. Comprueba los datos.";
+
+        if (response.IsSuccessStatusCode)
+            Nav.NavigateTo("/students");
+        else
+            error = "Error al guardar. Comprueba los datos.";
         loading = false;
     }
+
+    enum CategoryEnum { Benjamin, Alevin, Infantil, Cadete, Junior, Sub23, Senior }
+    enum BeltEnum { White, WhiteYellow, Yellow, YellowOrange, Orange, OrangeGreen, Green, GreenBlue, Blue, BlueBrown, Brown, Black1Dan, Black2Dan, Black3Dan }
 }

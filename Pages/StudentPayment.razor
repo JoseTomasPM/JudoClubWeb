@@ -5,64 +5,101 @@
 
 <AuthGuard>
     <a href="/students/@Id" class="back-link">← Volver al perfil</a>
-    <div class="flex-between mt-md">
-        <h3>Historial de pagos</h3>
-    </div>
+    <h3 class="mt-md">Historial de pagos</h3>
 
     @if (loading) { <p>Cargando...</p> }
-    else if (!payments.Any()) { <p class="text-muted">No hay pagos registrados.</p> }
     else
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Concepto</th>
-                    <th>Importe</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                    @if (Auth.Role == "Admin") { <th>Acciones</th> }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in payments)
-                {
+        @* ── Formulario nuevo pago (solo Admin) ── *@
+        @if (Auth.Role == "Admin")
+        {
+            <div class="card mt-md" style="max-width:500px; margin-bottom:24px;">
+                <h4 style="margin:0 0 12px">Registrar nuevo pago</h4>
+                @if (createError != null) { <p class="text-error">@createError</p> }
+                @if (createSuccess) { <p class="text-success">✅ Pago registrado.</p> }
+
+                <div class="form-group">
+                    <label>Concepto</label>
+                    <input @bind="newConcept" placeholder="Ej: Cuota enero" />
+                </div>
+                <div class="form-group">
+                    <label>Importe (€)</label>
+                    <input type="number" step="0.01" @bind="newAmount" />
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" @bind="newDate" />
+                </div>
+                <button class="btn btn-primary" @onclick="CreatePayment" disabled="@creating">
+                    @(creating ? "Guardando..." : "Registrar pago")
+                </button>
+            </div>
+        }
+
+        @* ── Lista de pagos ── *@
+        @if (!payments.Any()) { <p class="text-muted">No hay pagos registrados.</p> }
+        else
+        {
+            <p><strong>Total pendiente: @payments.Where(p => p.Status == "Pending").Sum(p => p.Amount).ToString("0.00") €</strong></p>
+
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>@p.Concept</td>
-                        <td>@p.Amount.ToString("0.00") €</td>
-                        <td>@p.Date.ToString("dd/MM/yyyy")</td>
-                        <td><span class="badge @GetBadgeClass(p.Status)">@p.Status</span></td>
-                        @if (Auth.Role == "Admin")
-                        {
-                            <td>
-                                <div class="flex gap-sm">
-                                    @if (p.Status != "Completed")
-                                    {
-                                        <button class="btn btn-success btn-sm" @onclick="() => ChangeStatus(p.Id, 1)">✅ Pagado</button>
-                                    }
-                                    @if (p.Status != "Failed")
-                                    {
-                                        <button class="btn btn-danger btn-sm" @onclick="() => ChangeStatus(p.Id, 2)">❌ Fallido</button>
-                                    }
-                                    <button class="btn btn-danger btn-sm" @onclick="() => DeletePayment(p.Id)">🗑️</button>
-                                </div>
-                            </td>
-                        }
+                        <th>Concepto</th>
+                        <th>Importe</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        @if (Auth.Role == "Admin") { <th>Acciones</th> }
                     </tr>
-                }
-            </tbody>
-        </table>
-        <p class="mt-md"><strong>Total pendiente: @payments.Where(p => p.Status == "Pending").Sum(p => p.Amount).ToString("0.00") €</strong></p>
+                </thead>
+                <tbody>
+                    @foreach (var p in payments)
+                    {
+                        <tr>
+                            <td>@p.Concept</td>
+                            <td>@p.Amount.ToString("0.00") €</td>
+                            <td>@p.Date.ToString("dd/MM/yyyy")</td>
+                            <td><span class="badge @GetBadgeClass(p.Status)">@p.Status</span></td>
+                            @if (Auth.Role == "Admin")
+                            {
+                                <td>
+                                    <div class="flex gap-sm">
+                                        @* Selector de estado *@
+                                        <select @onchange="e => ChangeStatus(p.Id, e)"
+                                                style="padding:4px; border-radius:var(--radius); border:1px solid #ccc;">
+                                            <option value="0" selected="@(p.Status == "Pending")">Pending</option>
+                                            <option value="1" selected="@(p.Status == "Completed")">Completed</option>
+                                            <option value="2" selected="@(p.Status == "Failed")">Failed</option>
+                                        </select>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => DeletePayment(p.Id)">🗑️</button>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     }
 </AuthGuard>
 
 @code {
     [Parameter] public int Id { get; set; }
+
     List<PaymentDto> payments = new();
     bool loading = true;
 
+    // Crear pago
+    string newConcept = "";
+    decimal newAmount;
+    DateTime newDate = DateTime.Today;
+    bool creating, createSuccess;
+    string? createError;
+
     protected override async Task OnInitializedAsync()
     {
-        await Load(); loading = false;
+        await Load();
+        loading = false;
     }
 
     async Task Load()
@@ -71,10 +108,32 @@
         catch { payments = new(); }
     }
 
-    async Task ChangeStatus(int paymentId, int status)
+    async Task CreatePayment()
     {
-        await Http.PutAsJsonAsync($"api/payments/{paymentId}/status", new { status });
-        await Load();
+        creating = true; createError = null; createSuccess = false;
+        var r = await Http.PostAsJsonAsync($"api/students/{Id}/payments", new
+        {
+            concept = newConcept,
+            amount  = newAmount,
+            date    = newDate
+        });
+        if (r.IsSuccessStatusCode)
+        {
+            createSuccess = true;
+            newConcept = ""; newAmount = 0; newDate = DateTime.Today;
+            await Load();
+        }
+        else createError = "Error al registrar el pago.";
+        creating = false;
+    }
+
+    async Task ChangeStatus(int paymentId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var status))
+        {
+            await Http.PutAsJsonAsync($"api/payments/{paymentId}/status", new { status });
+            await Load();
+        }
     }
 
     async Task DeletePayment(int paymentId)

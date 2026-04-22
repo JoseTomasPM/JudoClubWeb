@@ -15,6 +15,10 @@
             <div>
                 <h3 style="margin:0">@session.Date.ToString("dd/MM/yyyy HH:mm")</h3>
                 <p class="text-muted">@session.Description</p>
+                <p class="text-muted">@session.Category.ToString()</p>
+                <span class="badge badge-primary" style="background:var(--primary)">
+                    📁 @session.Category
+                </span>
             </div>
             @if (Auth.Role == "Admin")
             {
@@ -25,14 +29,26 @@
             }
         </div>
 
-        <h4 class="mt-lg">Alumnos en esta sesión (@students.Count)</h4>
+        @* ── Resumen de asistencia ── *@
+        <div class="card mt-lg">
+            <strong>Asistencia: @students.Count(s => s.Attended) / @students.Count presentes</strong>
+            <div style="background:#eee; border-radius:4px; height:8px; margin-top:8px;">
+                <div style="background:var(--success); height:8px; border-radius:4px;
+                            width:@(students.Count > 0 ? (students.Count(s => s.Attended) * 100 / students.Count) : 0)%">
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mt-lg">
+            Alumnos — @session.Category (@students.Count)
+        </h4>
 
         @if (Auth.Role == "Admin")
         {
             <div class="flex gap-sm mt-sm" style="margin-bottom:16px">
-                <input type="number" @bind="studentIdToAdd" placeholder="ID del alumno"
-                       style="padding:6px; border:1px solid #ccc; border-radius:var(--radius); width:150px;" />
-                <button class="btn btn-success btn-sm" @onclick="AddStudent">+ Añadir alumno</button>
+                <input type="number" @bind="studentIdToAdd" placeholder="ID alumno extra"
+                       style="padding:6px; border:1px solid #ccc; border-radius:var(--radius); width:160px;" />
+                <button class="btn btn-success btn-sm" @onclick="AddStudent">+ Añadir manualmente</button>
             </div>
             @if (addError != null) { <p class="text-error">@addError</p> }
         }
@@ -41,18 +57,39 @@
         else
         {
             <div class="card-grid">
-                @foreach (var s in students)
+                @foreach (var s in students.OrderByDescending(s => s.Attended))
                 {
-                    <div class="card" style="min-width:150px">
+                    <div class="card" style="min-width:170px; border-left:4px solid @(s.Attended ? "var(--success)" : "var(--border)")">
                         <strong>@s.Name</strong>
                         <p style="font-size:0.85em; margin:4px 0">🥋 @s.Belt</p>
-                        <div class="flex gap-sm mt-sm">
-                            <a href="/students/@s.StudentId" class="btn btn-primary btn-sm">Ver →</a>
-                            @if (Auth.Role == "Admin")
-                            {
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveStudent(s.StudentId)">🗑️</button>
-                            }
-                        </div>
+
+                        @if (Auth.Role == "Admin")
+                        {
+                            <div class="flex gap-sm mt-sm">
+                                @if (!s.Attended)
+                                {
+                                    <button class="btn btn-success btn-sm"
+                                            @onclick="() => MarkAttendance(s.StudentId, true)">
+                                        ✅ Presente
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm" style="background:#f0f0f0"
+                                            @onclick="() => MarkAttendance(s.StudentId, false)">
+                                        ↩️ Desmarcar
+                                    </button>
+                                }
+                                <button class="btn btn-danger btn-sm"
+                                        @onclick="() => RemoveStudent(s.StudentId)">🗑️</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <span style="font-size:0.85em">
+                                @(s.Attended ? "✅ Presente" : "⬜ Ausente")
+                            </span>
+                        }
                     </div>
                 }
             </div>
@@ -62,6 +99,7 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+
     SessionDto? session;
     List<SessionStudentDto> students = new();
     int studentIdToAdd;
@@ -80,12 +118,23 @@
         catch { }
     }
 
+    async Task MarkAttendance(int studentId, bool attended)
+    {
+        await Http.PutAsJsonAsync(
+            $"api/sessions/{Id}/students/{studentId}/attendance",
+            new { attended });
+
+        // Actualizar localmente sin recargar todo
+        var s = students.FirstOrDefault(x => x.StudentId == studentId);
+        if (s != null) s.Attended = attended;
+    }
+
     async Task AddStudent()
     {
         addError = null;
         var r = await Http.PostAsync($"api/sessions/{Id}/students/{studentIdToAdd}", null);
         if (r.IsSuccessStatusCode) { studentIdToAdd = 0; await Load(); }
-        else addError = "No se pudo añadir. Verifica que el ID es correcto y no está ya en la sesión.";
+        else addError = "No se pudo añadir. Verifica que el ID es correcto.";
     }
 
     async Task RemoveStudent(int studentId)

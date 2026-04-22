@@ -38,7 +38,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try { sessions = await Http.GetFromJsonAsync<List<SessionDto>>("api/sessions") ?? new(); }
+        try 
+        {
+            var endpoint = Auth.Role == "Admin" ? "api/sessions" : $"api/sessions/mysessions";
+            sessions = await Http.GetFromJsonAsync<List<SessionDto>>(endpoint) ?? new();
+        
+        }
         catch { sessions = new(); }
         loading = false;
     }
