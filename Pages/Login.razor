@@ -3,7 +3,7 @@
 @inject NavigationManager Nav
 
 <div class="auth-container">
-    <h3>Iniciar sesión</h3>
+    <h3>Iniciar sesiÃ³n</h3>
 
     @if (error != null)
     {
@@ -15,7 +15,7 @@
         <input type="email" @bind="email" />
     </div>
     <div class="form-group">
-        <label>Contraseña</label>
+        <label>ContraseÃ±a</label>
         <input type="password" @bind="password" />
     </div>
 
@@ -34,7 +34,7 @@
         loading = true; error = null;
         var ok = await Auth.LoginAsync(email, password);
         if (ok) Nav.NavigateTo("/");
-        else error = "Email o contraseña incorrectos.";
+        else error = "Email o contraseÃ±a incorrectos.";
         loading = false;
     }
 }
