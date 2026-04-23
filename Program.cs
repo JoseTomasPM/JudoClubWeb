@@ -11,7 +11,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://judoclubapi.onrender.com","http://localhost:5187")
+    // BaseAddress = new Uri("http://localhost:5187")  // desarrollo
+    BaseAddress = new Uri("https://judoclubapi.onrender.com") // producción
 });
 
 await builder.Build().RunAsync();
