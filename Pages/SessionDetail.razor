@@ -13,10 +13,10 @@
 
         <div class="flex-between mt-md">
             <div>
-                <h3 style="margin:0">@session.Date.ToString("dd/MM/yyyy HH:mm")</h3>
+                <h3>@session.Date.ToString("dd/MM/yyyy HH:mm")</h3>
                 <p class="text-muted">@session.Description</p>
                 <p class="text-muted">@session.Category.ToString()</p>
-                <span class="badge badge-primary" style="background:var(--primary)">
+                <span class="badge badge-primary">
                     📁 @session.Category
                 </span>
             </div>
@@ -32,7 +32,7 @@
         @* ── Resumen de asistencia ── *@
         <div class="card mt-lg">
             <strong>Asistencia: @students.Count(s => s.Attended) / @students.Count presentes</strong>
-            <div style="background:#eee; border-radius:4px; height:8px; margin-top:8px;">
+            <div>
                 <div style="background:var(--success); height:8px; border-radius:4px;
                             width:@(students.Count > 0 ? (students.Count(s => s.Attended) * 100 / students.Count) : 0)%">
                 </div>
@@ -45,9 +45,8 @@
 
         @if (Auth.Role == "Admin")
         {
-            <div class="flex gap-sm mt-sm" style="margin-bottom:16px">
-                <input type="number" @bind="studentIdToAdd" placeholder="ID alumno extra"
-                       style="padding:6px; border:1px solid #ccc; border-radius:var(--radius); width:160px;" />
+            <div class="flex gap-sm mt-sm">
+                <input type="number" @bind="studentIdToAdd" placeholder="ID alumno extra"/>
                 <button class="btn btn-success btn-sm" @onclick="AddStudent">+ Añadir manualmente</button>
             </div>
             @if (addError != null) { <p class="text-error">@addError</p> }
@@ -59,9 +58,9 @@
             <div class="card-grid">
                 @foreach (var s in students.OrderByDescending(s => s.Attended))
                 {
-                    <div class="card" style="min-width:170px; border-left:4px solid @(s.Attended ? "var(--success)" : "var(--border)")">
+                    <div class="card" style="@(s.Attended ? "var(--success)" : "var(--border)")">
                         <strong>@s.Name</strong>
-                        <p style="font-size:0.85em; margin:4px 0">🥋 @s.Belt</p>
+                        <p>🥋 @s.Belt</p>
 
                         @if (Auth.Role == "Admin")
                         {
@@ -75,7 +74,7 @@
                                 }
                                 else
                                 {
-                                    <button class="btn btn-sm" style="background:#f0f0f0"
+                                    <button class="btn btn-sm"
                                             @onclick="() => MarkAttendance(s.StudentId, false)">
                                         ↩️ Desmarcar
                                     </button>
@@ -86,7 +85,7 @@
                         }
                         else
                         {
-                            <span style="font-size:0.85em">
+                            <span>
                                 @(s.Attended ? "✅ Presente" : "⬜ Ausente")
                             </span>
                         }

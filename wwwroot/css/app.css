@@ -5,7 +5,7 @@
     --success: #22c55e;
     --danger: #e05252;
     --warning: #f59e0b;
-    --text-muted: #8b8f9a;
+    --text-muted: #a8adb8;
     --border: #2e3038;
     --radius: 8px;
     --bg-page: #1a1b1e;
@@ -90,6 +90,8 @@ body {
     font-size: 0.9em;
     display: inline-block;
     transition: opacity 0.15s;
+    background: #3a3d45; /* ← botones sin clase de color: gris visible */
+    color: var(--text);
 }
 
 .btn-primary {
@@ -135,7 +137,14 @@ body {
     }
 
     .form-group input,
-    .form-group select {
+    .form-group select,
+    input[type="number"],
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="datetime-local"],
+    select { /* ← cubre inputs fuera de .form-group */
         display: block;
         width: 100%;
         padding: 9px 12px;
@@ -147,11 +156,19 @@ body {
         transition: border-color 0.15s;
     }
 
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
+input[type="number"] {
+    width: auto;
+}
+/* los numéricos inline no deben ser 100% */
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
 
 /* ─── Tarjetas ──────────────────────────── */
 .card {
@@ -161,6 +178,15 @@ body {
     padding: 16px;
     color: var(--text);
 }
+
+    .card p {
+        color: var(--text-secondary);
+        margin: 4px 0;
+    }
+    /* ← p dentro de card */
+    .card strong {
+        color: var(--text);
+    }
 
 .card-grid {
     display: flex;
@@ -190,11 +216,13 @@ body {
 
     .stat-card p {
         margin: 0;
+        color: rgba(255,255,255,0.85);
     }
 
     .stat-card .stat-number {
         font-size: 2em;
         font-weight: bold;
+        color: white;
     }
 
 .stat-primary {
@@ -264,6 +292,12 @@ body {
     color: #fbbf24;
 }
 
+.badge-primary {
+    background: #1a2d5a;
+    color: #93b4ff;
+}
+
+
 /* ─── Sesiones ──────────────────────────── */
 .session-item {
     background: var(--bg-surface);
@@ -278,6 +312,15 @@ body {
 
     .session-item:hover {
         border-color: #444750;
+    }
+
+    .session-item p {
+        color: var(--text-secondary);
+        margin: 4px 0;
+    }
+
+    .session-item strong {
+        color: var(--text);
     }
 
 .session-list {
@@ -296,17 +339,18 @@ body {
     margin-top: 16px;
 }
 
+
 /* ─── Mensajes ──────────────────────────── */
 .text-error {
-    color: #f87171;
+    color: #f87171 !important;
 }
 
 .text-success {
-    color: #4ade80;
+    color: #4ade80 !important;
 }
 
 .text-muted {
-    color: var(--text-muted);
+    color: #a8adb8 !important;
 }
 
 /* ─── Utilidades ─────────────────────────── */
@@ -350,14 +394,25 @@ body {
         opacity: 0.8;
     }
 
-/* ─── Headings ───────────────────────────── */
+/* ─── Headings y texto global ────────────── */
 h2, h3, h4 {
     color: var(--text);
 }
 
-/* ─── Links ──────────────────────────────── */
+p {
+    color: var(--text-secondary);
+}
+
 a {
     color: var(--primary);
+}
+
+strong {
+    color: var(--text);
+}
+
+label {
+    color: var(--text-secondary);
 }
 
 /* ─── Blazor error UI ───────────────────── */

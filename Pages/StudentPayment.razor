@@ -13,8 +13,8 @@
         @* ── Formulario nuevo pago (solo Admin) ── *@
         @if (Auth.Role == "Admin")
         {
-            <div class="card mt-md" style="max-width:500px; margin-bottom:24px;">
-                <h4 style="margin:0 0 12px">Registrar nuevo pago</h4>
+            <div class="card mt-md">
+                <h4>Registrar nuevo pago</h4>
                 @if (createError != null) { <p class="text-error">@createError</p> }
                 @if (createSuccess) { <p class="text-success">✅ Pago registrado.</p> }
 
@@ -65,8 +65,7 @@
                                 <td>
                                     <div class="flex gap-sm">
                                         @* Selector de estado *@
-                                        <select @onchange="e => ChangeStatus(p.Id, e)"
-                                                style="padding:4px; border-radius:var(--radius); border:1px solid #ccc;">
+                                        <select @onchange="e => ChangeStatus(p.Id, e)">
                                             <option value="0" selected="@(p.Status == "Pending")">Pending</option>
                                             <option value="1" selected="@(p.Status == "Completed")">Completed</option>
                                             <option value="2" selected="@(p.Status == "Failed")">Failed</option>

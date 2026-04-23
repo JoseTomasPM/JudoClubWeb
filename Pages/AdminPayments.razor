@@ -8,8 +8,7 @@
         <h3>💳 Gestión de pagos</h3>
 
         @* Filtro de estado *@
-        <select @bind="statusFilter"
-                style="padding:6px; border-radius:var(--radius); border:1px solid #ccc;">
+        <select @bind="statusFilter">
             <option value="">Todos</option>
             <option value="Pending">Pendientes</option>
             <option value="Completed">Completados</option>
@@ -44,8 +43,7 @@
                         <td>@p.Date.ToString("dd/MM/yyyy")</td>
                         <td><span class="badge @GetBadgeClass(p.Status)">@p.Status</span></td>
                         <td>
-                            <select @onchange="e => ChangeStatus(p.Id, e)"
-                                    style="padding:4px; border-radius:var(--radius); border:1px solid #ccc;">
+                            <select @onchange="e => ChangeStatus(p.Id, e)">
                                 <option value="0" selected="@(p.Status == "Pending")">Pending</option>
                                 <option value="1" selected="@(p.Status == "Completed")">Completed</option>
                                 <option value="2" selected="@(p.Status == "Failed")">Failed</option>

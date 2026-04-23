@@ -17,7 +17,7 @@
                 <div class="card flex-between mt-sm">
                     <div>
                         <strong>📄 @d.Name</strong>
-                        <p class="text-muted" style="font-size:0.8em; margin:2px 0">
+                        <p class="text-muted">
                             Subido por @d.UploadBy · @d.UploadDate.ToString("dd/MM/yyyy")
                         </p>
                     </div>
@@ -30,7 +30,7 @@
         }
 
         <div class="upload-zone">
-            <h4 style="margin:0 0 12px">Subir documento</h4>
+            <h4>Subir documento</h4>
             @if (uploadError != null) { <p class="text-error">@uploadError</p> }
             @if (uploadSuccess) { <p class="text-success">✅ Subido correctamente.</p> }
             <InputFile OnChange="OnFileSelected" accept=".pdf" />

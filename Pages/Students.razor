@@ -21,15 +21,15 @@
             @foreach (var s in students)
             {
                 <div class="card card-student">
-                    <h4 style="margin:0 0 8px">@s.Name</h4>
+                    <h4>@s.Name</h4>
                     <p>🥋 @s.Belt</p>
                     <p>📁 @s.Category</p>
-                    <p class="text-muted" style="font-size:0.8em">@s.BirthDate.ToString("dd/MM/yyyy")</p>
+                    <p class="text-muted">@s.BirthDate.ToString("dd/MM/yyyy")</p>
                     <div class="flex gap-sm mt-sm">
                         <a href="/students/@s.Id" class="btn btn-primary btn-sm">Ver →</a>
                         @if (Auth.Role == "Admin")
                         {
-                            <a href="/students/@s.Id/edit" class="btn btn-sm" style="background:#f0f0f0">✏️</a>
+                            <a href="/students/@s.Id/edit" class="btn btn-sm">✏️</a>
                             <button class="btn btn-danger btn-sm" @onclick="() => DeleteStudent(s.Id)">🗑️</button>
                         }
                     </div>
