@@ -259,6 +259,7 @@ input::placeholder {
         padding: 10px 12px;
         border-bottom: 1px solid var(--border);
         color: var(--text-secondary);
+        background: var(--bg-page); 
     }
 
     .table tr:last-child td {
@@ -266,7 +267,18 @@ input::placeholder {
     }
 
     .table tr:hover td {
-        background: var(--bg-surface);
+        background: var(--bg-surface); 
+        color: var(--text); 
+    }
+
+    .table td select {
+        width: auto;
+        padding: 4px 8px;
+        font-size: 0.85em;
+        background: var(--bg-page);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
     }
 
 /* ─── Badge de estado ───────────────────── */
